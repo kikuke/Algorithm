@@ -6,7 +6,7 @@ int n;
 int arr[41][2] = {1, 0, 0, 1, 1, 1};
 int arrCol = sizeof(arr) / sizeof(*arr);
 
-void printArr(int idx) { cout << arr[idx][0] << " " << arr[idx][1] << endl; }
+void printArr(int idx) { cout << arr[idx][0] << " " << arr[idx][1] << "\n"; }
 
 void cal_fibo() {
   for (int i = 3; i < arrCol; i++) {
@@ -16,6 +16,9 @@ void cal_fibo() {
 }
 
 int main(void) {
+  ios_base::sync_with_stdio(false);
+  cin.tie(NULL);
+
   cin >> n;
 
   cal_fibo();
