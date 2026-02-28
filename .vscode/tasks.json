@@ -3,14 +3,14 @@
         {
             "type": "cppbuild",
             "label": "C/C++: g++-11 build active file",
-            "command": "/opt/homebrew/bin/g++-11",
+            "command": "C:/MinGW/bin/g++.exe",
             "args": [
                 "-std=c++11",
                 "-fdiagnostics-color=always",
                 "-g",
                 "${file}",
                 "-o",
-                "${fileDirname}/${fileBasenameNoExtension}"
+                "${fileDirname}/${fileBasenameNoExtension}.exe"
             ],
             "options": {
                 "cwd": "${fileDirname}"
