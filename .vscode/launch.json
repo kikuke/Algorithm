@@ -5,6 +5,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${fileDirname}/${fileBasenameNoExtension}.exe",
+            // "program": "${fileDirname}/../test.out",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",

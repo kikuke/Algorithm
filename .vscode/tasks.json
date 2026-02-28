@@ -11,6 +11,7 @@
                 "${file}",
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}.exe"
+                // "${fileDirname}/../test.out"
             ],
             "options": {
                 "cwd": "${fileDirname}"
