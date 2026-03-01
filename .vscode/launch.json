@@ -4,7 +4,7 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${fileDirname}/${fileBasenameNoExtension}.exe",
+            "program": "${fileDirname}/../test.exe",
             // "program": "${fileDirname}/../test.out",
             "args": [],
             "stopAtEntry": false,
