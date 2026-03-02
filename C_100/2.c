@@ -15,7 +15,7 @@ int main(void)
 
     if ((tSeed = time(0)) == (time_t)-1) {
         fprintf(stderr, "Error is Occurred in time()\n");
-        return -1;
+        return 1;
     }
     srand((unsigned int)tSeed);
 
