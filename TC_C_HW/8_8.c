@@ -8,7 +8,12 @@ int leaf[LEAF_MAX];
 
 int comp(const void *a, const void *b)
 {
-    return *(int *)a > *(int *)b;
+    const int _a = *(const int *)a;
+    const int _b = *(const int *)b;
+
+    if (_a < _b) return -1;
+    if (_b < _a) return 1;
+    return 0;
 }
 
 int get_count(int iStart, int iFirst)
@@ -16,11 +21,11 @@ int get_count(int iStart, int iFirst)
     const int dist_min = leaf[iFirst] - leaf[iStart];
     const int dist_max = dist_min * 2;
     int _i_left, _i_mid, _i_right;
-    int _i_min = 0, _i_max = 0;
+    int _i_min = -1, _i_max = -1;
     int res = 0;
 
     _i_left = iFirst + 1;
-    _i_right = leaf_cnt;
+    _i_right = leaf_cnt - 1;
 
     /* Get Lower */
     while (_i_left <= _i_right) {
@@ -28,7 +33,7 @@ int get_count(int iStart, int iFirst)
 
         _i_mid = (_i_left + _i_right) / 2;
         dist_cur = leaf[_i_mid] - leaf[iFirst];
-        if ((dist_min <= dist_cur) && (dist_max >= dist_cur)) {
+        if (dist_min <= dist_cur) {
             _i_min = _i_mid;
             _i_right = _i_mid - 1;
         } else {
@@ -38,7 +43,7 @@ int get_count(int iStart, int iFirst)
 
     
     _i_left = iFirst + 1;
-    _i_right = leaf_cnt;
+    _i_right = leaf_cnt - 1;
 
     /* Get Upper */
     while (_i_left <= _i_right) {
@@ -46,7 +51,7 @@ int get_count(int iStart, int iFirst)
 
         _i_mid = (_i_left + _i_right) / 2;
         dist_cur = leaf[_i_mid] - leaf[iFirst];
-        if ((dist_min <= dist_cur) && (dist_max >= dist_cur)) { // 수정하기
+        if (dist_max >= dist_cur) {
             _i_max = _i_mid;
             _i_left = _i_mid + 1;
         } else {
@@ -54,11 +59,11 @@ int get_count(int iStart, int iFirst)
         }
     }
 
-    if (_i_min > 0) {
+    if ((_i_min >= 0) && (_i_max >= _i_min)) {
         res = (_i_max - _i_min) + 1;
     }
 
-    return ((res > 0) ? res : 0);
+    return res;
 }
 
 int main(void)
@@ -80,7 +85,7 @@ int main(void)
     iFirst_max = leaf_cnt - 1;
 
     for (int iStart = 0; iStart < iStart_max; iStart++) {
-        for (int iFirst = 1; iFirst < iFirst_max; iFirst++) {
+        for (int iFirst = iStart + 1; iFirst < iFirst_max; iFirst++) {
             sum += get_count(iStart, iFirst);
         }
     }
