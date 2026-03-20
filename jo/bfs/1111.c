@@ -72,17 +72,10 @@ inline int update_map(stPOINT cur_pos, stPOINT dir)
     /* Compare Height & Caculate Weight */
     {
         int gap = map[cur_pos.y][cur_pos.x] - map[move_pos.y][move_pos.x];
-        if (gap > 0) {
-            /* Case of Dec: dif */
-            weight = gap;
-        }
-        else if (gap < 0) {
+        weight = gap;
+        if (gap < 0) {
             /* Case of Asc: pow */
-            weight = gap * gap;
-        }
-        else {
-            /* Case Of Flat: 0 */
-            weight = 0;
+            weight *= gap;
         }
         weight += map_w[cur_pos.y][cur_pos.x];
     }
