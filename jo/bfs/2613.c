@@ -118,8 +118,6 @@ int main(void)
     int day_max;
 
     // freopen("../../test.txt", "r", stdin);
-    /* 입력을 받으며 동시에 1인 경우 start_point에 스타팅 포인트 선정 */
-
     input();
 
     day_max = bfs(&bfs_q);
