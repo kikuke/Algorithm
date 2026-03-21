@@ -11,7 +11,7 @@ typedef enum {
     eOP_GO_1,
     eOP_GO_2,
     eOP_GO_3,
-    eOP_GO_MAX,
+    eOP_MAX,
 } eOP;
 
 typedef enum {
@@ -54,15 +54,16 @@ stSTAT stSTAT_Operate(stSTAT cur_stat, eOP op);
 /* Return
     Success: 0
     Fail: -1
+    cal_stat: copy Calculated Stat, if Succeed.
 */
-int update_map(stSTAT cur_stat, eOP op);
+int update_map(stSTAT cur_stat, eOP op, stSTAT *cal_stat);
 
 stPOINT move_dir[eDIR_MAX] = {
     [eDIR_DUMMY] = {0, 0}, /* Dummy */
     [eDIR_R] = {+0, +1},
     [eDIR_L] = {+0, -1},
-    [eDIR_D] = {-1, +0},
-    [eDIR_U] = {+1, +0}
+    [eDIR_D] = {+1, +0},
+    [eDIR_U] = {-1, +0}
 };
 
 stSTAT stat_start;
@@ -91,7 +92,7 @@ void init_data(void)
 
     /* Init Map */
     memset(map[0], 0xFF, sizeof(int) * (N+2));
-    for(int i = 1; i <= N; ++i) {
+    for(int i = 1; i <= M; ++i) {
         map[i][0] = 0xFFFFFFFF;
         for (int j = 1; j <= N; ++j) {
             scanf("%d", &map[i][j]);
@@ -205,72 +206,64 @@ inline stSTAT stSTAT_Operate(stSTAT cur_stat, eOP op)
     return next_stat;
 }
 
-inline int update_map(stSTAT cur_stat, eOP op)
+inline int update_map(stSTAT cur_stat, eOP op, stSTAT *cal_stat)
 {
-    int weight = 0;
+    int cur_weight = -1;
+    int next_weight = -1;
     stSTAT next_stat = stSTAT_Operate(cur_stat, op);
-    
-    /* Out Line */
-    if (map[move_pos.y][move_pos.x] == 0)
+
+    /* Check Path */
+    if ((next_stat.pos.y < 1) || (next_stat.pos.y > M) || (next_stat.pos.x < 1) || (next_stat.pos.x > N))
         return -1;
-    
-    /* Compare Height & Caculate Weight */
-    {
-        int gap = map[cur_pos.y][cur_pos.x] - map[move_pos.y][move_pos.x];
-        weight = gap;
-        if (gap < 0) {
-            /* Case of Asc: pow */
-            weight *= gap;
+    if (op >= eOP_GO_1 && op <= eOP_GO_3) {
+        int check_cnt = op - eOP_GO_1 + 1;
+
+        for (int i_check = 1; i_check <= check_cnt; i_check++) {
+            if (map[cur_stat.pos.y + (move_dir[cur_stat.dir].y * i_check)][cur_stat.pos.x + (move_dir[cur_stat.dir].x * i_check)] == 1)
+                return -1;
         }
-        weight += map_w[cur_pos.y][cur_pos.x];
     }
-
-    /* Check If Update & Update */
-    if ((map_w[move_pos.y][move_pos.x] != MAP_FILL_DATA) && (map_w[move_pos.y][move_pos.x] <= weight)) {
+    
+    /* Compare & Caculate Weight */
+    cur_weight = map_w[next_stat.dir][next_stat.pos.y][next_stat.pos.x];
+    next_weight = map_w[cur_stat.dir][cur_stat.pos.y][cur_stat.pos.x] + 1;
+    if ((cur_weight != MAP_FILL_DATA) && (cur_weight <= next_weight))
         return -1;
-    }
+    
+    map_w[next_stat.dir][next_stat.pos.y][next_stat.pos.x] = next_weight;
 
-    map_w[move_pos.y][move_pos.x] = weight;
+    *cal_stat = next_stat;
     return 0;
 }
-#if 0
 
 int bfs(void)
 {
-    const int N_BOUND = N + 1;
+    stSTAT *pCur_stat = NULL;
+    stSTAT_QUEUE_Push(&stat_start);
+    map_w[stat_start.dir][stat_start.pos.y][stat_start.pos.x] = 0;
 
-    /* init Q */
-    for (int i = 1; i <= N; ++i) {
-        q[q_rear++] = (stPOINT) { .y = 0, .x = i };
-        q[q_rear++] = (stPOINT) { .y = N_BOUND, .x = i };
-        q[q_rear++] = (stPOINT) { .y = i, .x = 0 };
-        q[q_rear++] = (stPOINT) { .y = i, .x = N_BOUND };
-    }
+    while ((pCur_stat = stSTAT_QUEUE_Pop()) != NULL) {
+        stSTAT cur_stat = *pCur_stat;
+        stSTAT next_stat;
 
-    while (!stPOINT_IsEmpty()) {
-        stPOINT cur_pos = q[q_front++];
-        for (size_t i_dir = 0; i_dir < MAP_DIR_MAX; i_dir++){
-            if (update_map(cur_pos, move_dir[i_dir]) < 0)
+        for (eOP i_op = 0; i_op < eOP_MAX; i_op++){
+            if (update_map(cur_stat, i_op, &next_stat) < 0)
                 continue;
 
-            q[q_rear++] = (stPOINT) {
-                .y = (cur_pos.y + move_dir[i_dir].y),
-                .x = (cur_pos.x + move_dir[i_dir].x)
-            };
+            stSTAT_QUEUE_Push(&next_stat);
         }
     }
 
-    return map_w[end_pos.y][end_pos.x];
+    return map_w[stat_end.dir][stat_end.pos.y][stat_end.pos.x];
 }
-#endif
 
 int main(void)
 {
-    freopen("../../test.txt", "r", stdin);
+    // freopen("../../test.txt", "r", stdin);
 
     init_data();
 
-    // printf("%d\n", bfs());
+    printf("%d\n", bfs());
 
     return 0;
 }
