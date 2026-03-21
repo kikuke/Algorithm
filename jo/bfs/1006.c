@@ -41,18 +41,28 @@ typedef struct {
     stSTAT data[STAT_QUEUE_MAX];
 } stSTAT_QUEUE;
 
-void stSTAT_QUEUE_Push(stSTAT *stat);
+/* Return
+    Success: 0
+    Fail: -1
+*/
+int stSTAT_QUEUE_Push(stSTAT *stat);
 /* Need to Deep Copy, Null Value: Empty */
 stSTAT *stSTAT_QUEUE_Pop(void);
 
+stSTAT stSTAT_Operate(stSTAT cur_stat, eOP op);
+
+/* Return
+    Success: 0
+    Fail: -1
+*/
 int update_map(stSTAT cur_stat, eOP op);
 
 stPOINT move_dir[eDIR_MAX] = {
-    {0, 0}, /* Dummy */
-    {1, 0},
-    {-1, 0},
-    {0, 1},
-    {0, -1}
+    [eDIR_DUMMY] = {0, 0}, /* Dummy */
+    [eDIR_R] = {+0, +1},
+    [eDIR_L] = {+0, -1},
+    [eDIR_D] = {-1, +0},
+    [eDIR_U] = {+1, +0}
 };
 
 stSTAT stat_start;
@@ -80,36 +90,125 @@ void init_data(void)
     }
 
     /* Init Map */
+    memset(map[0], 0xFF, sizeof(int) * (N+2));
     for(int i = 1; i <= N; ++i) {
+        map[i][0] = 0xFFFFFFFF;
         for (int j = 1; j <= N; ++j) {
             scanf("%d", &map[i][j]);
         }
+        map[i][N+1] = 0xFFFFFFFF;
     }
+    memset(map[M+1], 0xFF, sizeof(int) * (N+2));
     
     scanf("%d %d %d", &stat_start.pos.y, &stat_start.pos.x, &stat_start.dir);
     scanf("%d %d %d", &stat_end.pos.y, &stat_end.pos.x, &stat_end.dir);
 }
 
-inline void stSTAT_QUEUE_Push(stSTAT *stat)
+inline int stSTAT_QUEUE_Push(stSTAT *stat)
 {
-    size_t next_rear = (q.rear + 1) % 
+    size_t next_rear = (q.rear + 1) % STAT_QUEUE_MAX;
+
+    if (next_rear == q.front)
+        return -1;
+
+    q.data[q.rear] = *stat;
+    q.rear = next_rear;
+    return 0;
 }
 
-stSTAT *stSTAT_QUEUE_Pop(void);
+inline stSTAT *stSTAT_QUEUE_Pop(void)
+{
+    size_t next_front = (q.front + 1) % STAT_QUEUE_MAX;
+    stSTAT *stat = NULL;
 
-#if 0
-/* Return Value - 0: Success -1: Failed */
-inline int update_map(stPOINT cur_pos, stPOINT dir)
+    /* Check Empty */
+    if (q.front == q.rear)
+        return NULL;
+    
+    stat = &q.data[q.front];
+    q.front = next_front;
+
+    return stat;
+}
+
+inline stSTAT stSTAT_Operate(stSTAT cur_stat, eOP op)
+{
+    stSTAT next_stat = cur_stat;
+
+    switch (op)
+    {
+    case eOP_TURN_L:
+    {
+        switch (next_stat.dir)
+        {
+        case eDIR_R:
+            next_stat.dir = eDIR_U;
+            break;
+        case eDIR_L:
+            next_stat.dir = eDIR_D;
+            break;
+        case eDIR_D:
+            next_stat.dir = eDIR_R;
+            break;
+        case eDIR_U:
+            next_stat.dir = eDIR_L;
+            break;
+        default:
+            break;
+        }
+    }
+    break;
+    case eOP_TURN_R:
+    {
+        switch (next_stat.dir)
+        {
+        case eDIR_R:
+            next_stat.dir = eDIR_D;
+            break;
+        case eDIR_L:
+            next_stat.dir = eDIR_U;
+            break;
+        case eDIR_D:
+            next_stat.dir = eDIR_L;
+            break;
+        case eDIR_U:
+            next_stat.dir = eDIR_R;
+            break;
+        default:
+            break;
+        }
+    }
+    break;
+    case eOP_GO_1:
+        next_stat.pos = (stPOINT){
+            .y = cur_stat.pos.y + (move_dir[cur_stat.dir].y * 1),
+            .x = cur_stat.pos.x + (move_dir[cur_stat.dir].x * 1)
+        };
+        break;
+    case eOP_GO_2:
+        next_stat.pos = (stPOINT){
+            .y = cur_stat.pos.y + (move_dir[cur_stat.dir].y * 2),
+            .x = cur_stat.pos.x + (move_dir[cur_stat.dir].x * 2)
+        };
+        break;
+    case eOP_GO_3:
+        next_stat.pos = (stPOINT){
+            .y = cur_stat.pos.y + (move_dir[cur_stat.dir].y * 3),
+            .x = cur_stat.pos.x + (move_dir[cur_stat.dir].x * 3)
+        };
+        break;
+    
+    default:
+        break;
+    }
+
+    return next_stat;
+}
+
+inline int update_map(stSTAT cur_stat, eOP op)
 {
     int weight = 0;
-    stPOINT move_pos = {
-        .y = (cur_pos.y + dir.y),
-        .x = (cur_pos.x + dir.x)
-    };
-
-    /* Check Bound */
-    if ((move_pos.x < 0) || (move_pos.y < 0) || (move_pos.x > N+1) || (move_pos.y > N+1))
-        return -1;
+    stSTAT next_stat = stSTAT_Operate(cur_stat, op);
     
     /* Out Line */
     if (map[move_pos.y][move_pos.x] == 0)
@@ -134,6 +233,7 @@ inline int update_map(stPOINT cur_pos, stPOINT dir)
     map_w[move_pos.y][move_pos.x] = weight;
     return 0;
 }
+#if 0
 
 int bfs(void)
 {
